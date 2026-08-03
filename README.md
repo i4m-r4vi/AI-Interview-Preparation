@@ -79,11 +79,12 @@ Start the frontend development server:
 npm run dev
 ```
 
-### 4. Docker Setup (Optional)
-If you prefer to run MongoDB via Docker, you can use the provided `docker-compose.yml`:
+### 4. Docker Setup
+You can run the entire application stack (Frontend, Backend, MongoDB, and Ollama) using Docker Compose:
 ```bash
-docker-compose up -d
+docker-compose up --build -d
 ```
+This will spin up all necessary containers and link them automatically.
 
 ## 🤝 Contributing
 Contributions, issues, and feature requests are welcome!
