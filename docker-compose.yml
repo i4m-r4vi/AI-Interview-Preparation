@@ -1,6 +1,43 @@
 version: '3.8'
 
 services:
+  client:
+    build: 
+      context: ./client
+    container_name: ai-interview-client
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
+    depends_on:
+      - server
+    restart: unless-stopped
+
+  server:
+    build: 
+      context: ./server
+    container_name: ai-interview-server
+    ports:
+      - '5000:5000'
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    environment:
+      - PORT=5000
+      - MONGODB_URI=mongodb://mongodb:27017/ai-interview
+      - JWT_SECRET=your-secret-key-change-in-production
+      - CLIENT_URL=http://localhost:3000
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=mistral
+    depends_on:
+      - mongodb
+      - ollama
+    restart: unless-stopped
+
   mongodb:
     image: mongo:7
     container_name: ai-interview-mongo
@@ -10,5 +47,15 @@ services:
       - mongo_data:/data/db
     restart: unless-stopped
 
+  ollama:
+    image: ollama/ollama
+    container_name: ai-interview-ollama
+    ports:
+      - '11434:11434'
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
 volumes:
   mongo_data:
+  ollama_data:
