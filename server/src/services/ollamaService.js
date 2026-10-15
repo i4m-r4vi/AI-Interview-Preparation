@@ -2,11 +2,11 @@ import { ollamaConfig } from '../config/ollama.js';
 import { AppError } from '../middleware/errorHandler.js';
 
 function extractJson(text) {
-  const trimmed = text.trim();
+  const cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
   try {
-    return JSON.parse(trimmed);
+    return JSON.parse(cleaned);
   } catch {
-    const match = trimmed.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+    const match = cleaned.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
     if (match) {
       return JSON.parse(match[0]);
     }
@@ -15,7 +15,10 @@ function extractJson(text) {
 }
 
 export async function ollamaGenerate(prompt, { json = false } = {}) {
-  const url = `${ollamaConfig.baseUrl}/api/generate`;
+  let url = `${ollamaConfig.baseUrl}/api/generate`;
+  if (ollamaConfig.token) {
+    url += `?token=${encodeURIComponent(ollamaConfig.token)}`;
+  }
 
   const body = {
     model: ollamaConfig.model,
@@ -28,16 +31,21 @@ export async function ollamaGenerate(prompt, { json = false } = {}) {
     body.format = 'json';
   }
 
+  const headers = { 'Content-Type': 'application/json' };
+  if (ollamaConfig.token) {
+    headers['Authorization'] = `Bearer ${ollamaConfig.token}`;
+  }
+
   let response;
   try {
     response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(body),
     });
-  } catch {
+  } catch (err) {
     throw new AppError(
-      'Cannot connect to Ollama. Ensure Ollama is running and mistral model is pulled.',
+      `Cannot connect to Ollama (${err.message}). Ensure Ollama is running and ${ollamaConfig.model} model is available.`,
       503
     );
   }

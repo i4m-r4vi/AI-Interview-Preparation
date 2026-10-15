@@ -14,14 +14,20 @@ const start = async () => {
     console.log(`Server running on port ${PORT}`);
     
     try {
-      const response = await fetch(ollamaConfig.baseUrl);
+      let pingUrl = ollamaConfig.baseUrl;
+      const headers = {};
+      if (ollamaConfig.token) {
+        pingUrl += `/?token=${encodeURIComponent(ollamaConfig.token)}`;
+        headers['Authorization'] = `Bearer ${ollamaConfig.token}`;
+      }
+      const response = await fetch(pingUrl, { headers });
       if (response.ok) {
         console.log('Ollama connected');
       } else {
         console.warn(`Ollama responded with status: ${response.status}`);
       }
     } catch (error) {
-      console.warn(`Warning: Could not connect to Ollama at ${ollamaConfig.baseUrl}`);
+      console.warn(`Warning: Could not connect to Ollama at ${ollamaConfig.baseUrl}: ${error.message}`);
     }
   });
 };
